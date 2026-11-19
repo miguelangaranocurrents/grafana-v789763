@@ -155,7 +155,12 @@ function reduceSeriesToRows(
     // For reduced fields, we don't know the type until we see the value
     for (const f of fields) {
       if (f.type === FieldType.other) {
-        const t = guessFieldTypeForField(f);
+        // A reduced column mixes results of every source field (e.g. a text column's last value next to
+        // numeric results). If any result is a real number, keep the column numeric rather than letting
+        // the first (possibly text) row decide the type.
+        const t = f.values.some((v) => typeof v === 'number' && !Number.isNaN(v))
+          ? FieldType.number
+          : guessFieldTypeForField(f);
         if (t) {
           f.type = t;
         }
